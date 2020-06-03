@@ -1,0 +1,23 @@
+{
+    "name": "imagecompressor",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "log": "mkdir -p log",
+        "start": "npm run log; node index.js | ./node_modules/.bin/pino-pretty >> log/info.log 2>> log/error.log",
+        "debug": "npm run log; LOG_LEVEL=debug npm start"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "compress-image": "0.0.1",
+        "compress-images": "^1.7.8",
+        "gifsicle": "^5.1.0",
+        "pino": "^6.3.2",
+        "pngquant": "^3.0.0"
+    },
+    "devDependencies": {
+        "pino-pretty": "^4.0.0"
+    }
+}
