@@ -19,7 +19,7 @@ function getFileSize(fileName, callback) {
     })
 }
 
-if (process.env.NODE_ENV != 'debug') {
+if (process.env.NODE_ENV != 'dev') {
     console.log = function() {} //Fancy logging only 
 }
 const recentlyEdited = [];
