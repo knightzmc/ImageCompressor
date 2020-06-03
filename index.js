@@ -58,12 +58,13 @@ fs.watch(directory, (_event, fileName) => {
     function compareSize(previousSize, onFinish) {
         getFileSize(fileName, (size) => {
             if (size != previousSize) {
-                compareSize(size)
+                compareSize(size, onFinish)
             } else {
                 onFinish()
             }
         })
     }
+
     compareSize(0, () => {
         compress(fileName, './build/', { statistic: true, autoupdate: true }, false, { jpg: { engine: 'mozjpeg', command: ['-quality', '60'] } }, { png: { engine: 'pngquant', command: ['--quality=20-50'] } }, { svg: { engine: 'svgo', command: '--multipass' } }, { gif: { engine: 'gifsicle', command: ['--colors', '64', '--use-col=web'] } },
             function(err, completed, statistic) {
