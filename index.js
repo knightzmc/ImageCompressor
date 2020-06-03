@@ -55,11 +55,14 @@ fs.watch(directory, (_event, fileName) => {
 
     function compareSize(previousSize, onFinish) {
         getFileSize(fileName, (size) => {
+            logger.debug(size)
             if (size !== previousSize) {
+                logger.debug("Sizes do not match. Waiting 10ms...")
                 setTimeout(() => {
                     compareSize(size, onFinish)
                 }, 10);
             } else {
+                logger.debug("Sizes match! %d - compressing...", size)
                 onFinish()
             }
         })
