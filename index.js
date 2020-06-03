@@ -25,7 +25,6 @@ if (process.env.NODE_ENV != 'dev') {
     console.log = function() {} //Fancy logging only 
 }
 
-const recentlyEdited = [];
 const cachedPreviousValues = [];
 
 const directory = process.env.npm_config_directory || '.'
@@ -55,32 +54,33 @@ fs.watch(directory, (_event, fileName) => {
         logger.debug(`Ignoring deleted file ${fileName}`)
         return
     }
-    const previousUploaded = cachedPreviousValues.filter(v => v.fileName == fileName)
 
-    getFileSize(fileName, (size) => {
-        cachedPreviousValues.splice(cachedPreviousValues.indexOf(previousUploaded))
-        cachedPreviousValues.push({ fileName: fileName, size: size })
-        if (previousUploaded && previousUploaded.size != size) {
-            logger.debug("Size of file %d is different to cached value, assuming upload in progress.")
-            return
-        }
-    })
-
-    compress(fileName, './build/', { statistic: true, autoupdate: true }, false, { jpg: { engine: 'mozjpeg', command: ['-quality', '60'] } }, { png: { engine: 'pngquant', command: ['--quality=20-50'] } }, { svg: { engine: 'svgo', command: '--multipass' } }, { gif: { engine: 'gifsicle', command: ['--colors', '64', '--use-col=web'] } },
-        function(err, completed, statistic) {
-            logErr(err)
-            if (!completed) {
-                logger.warn('Completed var was falsey. Value: %s', completed)
-                return
+    function compareSize(previousSize, onFinish) {
+        getFileSize(fileName, (size) => {
+            if (size != previousSize) {
+                compareSize(size)
+            } else {
+                onFinish()
             }
-
-            let outName = statistic.path_out_new
-            recentlyEdited.push(outName)
-
-            fs.rename(outName, fileName, () => {
-                logger.info('Successfully compressed file %s from %dKB to %dKB. %d\% File size reduction.', fileName, statistic.size_in, statistic.size_output, statistic.percent)
-                recentlyEdited.pop() //Removes `outName` from the array
-                recentlyEdited.splice(recentlyEdited.indexOf(fileName))
-            })
         })
+    }
+    compareSize(0, () => {
+        compress(fileName, './build/', { statistic: true, autoupdate: true }, false, { jpg: { engine: 'mozjpeg', command: ['-quality', '60'] } }, { png: { engine: 'pngquant', command: ['--quality=20-50'] } }, { svg: { engine: 'svgo', command: '--multipass' } }, { gif: { engine: 'gifsicle', command: ['--colors', '64', '--use-col=web'] } },
+            function(err, completed, statistic) {
+                logErr(err)
+                if (!completed) {
+                    logger.warn('Completed var was falsey. Value: %s', completed)
+                    return
+                }
+
+                let outName = statistic.path_out_new
+                recentlyEdited.push(outName)
+
+                fs.rename(outName, fileName, () => {
+                    logger.info('Successfully compressed file %s from %dKB to %dKB. %d\% File size reduction.', fileName, statistic.size_in, statistic.size_output, statistic.percent)
+                    recentlyEdited.pop() //Removes `outName` from the array
+                    recentlyEdited.splice(recentlyEdited.indexOf(fileName))
+                })
+            })
+    })
 })
