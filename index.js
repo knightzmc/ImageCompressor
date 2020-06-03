@@ -19,8 +19,6 @@ function getFileSize(fileName, callback) {
     })
 }
 
-console.log(process.env.NODE_ENV);
-
 if (process.env.NODE_ENV != 'dev') {
     console.log = function() {} //Fancy logging only 
 }
@@ -58,7 +56,9 @@ fs.watch(directory, (_event, fileName) => {
     function compareSize(previousSize, onFinish) {
         getFileSize(fileName, (size) => {
             if (size !== previousSize) {
-                compareSize(size, onFinish)
+                setTimeout(() => {
+                    compareSize(size, onFinish)
+                }, 10);
             } else {
                 onFinish()
             }
