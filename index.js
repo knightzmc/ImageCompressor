@@ -25,7 +25,7 @@ if (process.env.NODE_ENV != 'dev') {
     console.log = function() {} //Fancy logging only 
 }
 
-const cachedPreviousValues = [];
+const recentlyEdited = [];
 
 const directory = process.env.npm_config_directory || '.'
 fs.watch(directory, (_event, fileName) => {
