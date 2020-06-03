@@ -5,8 +5,12 @@
     "main": "index.js",
     "scripts": {
         "log": "mkdir -p log",
-        "start": "npm run log; node index.js | ./node_modules/.bin/pino-pretty >> log/info.log 2>> log/error.log",
-        "debug": "npm run log; LOG_LEVEL=debug npm start"
+        " >> log/info.log 2>> log/error.log": "",
+        "start": "npm run log; node index.js ${npm_config_dir} | ./node_modules/.bin/pino-pretty",
+        "debug": "LOG_LEVEL=debug npm start"
+    },
+    "config": {
+        "directory": "."
     },
     "author": "",
     "license": "ISC",

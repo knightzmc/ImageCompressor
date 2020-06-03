@@ -3,7 +3,7 @@ const fs = require('fs')
 const pino = require('pino')
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' })
-const imageExtensions = ['png', 'jpg', 'jpg']
+const imageExtensions = ['png', 'jpg', 'svg', 'gif']
 
 function logErr(err) {
     if (err) {
@@ -22,14 +22,9 @@ function getFileSize(fileName, callback) {
 console.log = function() {} //Fancy logging only 
 const recentlyEdited = [];
 
-function scheduleRemoval(array, value) {
-    setTimeout(() => {
-        array.splice(array.indexOf(value))
-    }, 1000);
-}
-
-fs.watch('.', (event, fileName) => {
-    if (fileName.startsWith('build/')) {
+const directory = process.env.npm_config_directory || '.'
+fs.watch(directory, (_event, fileName) => {
+    if (fileName.startsWith('./build/')) {
         logger.debug(`Ignoring file in build directory ${fileName}`)
         return
     }
@@ -37,12 +32,8 @@ fs.watch('.', (event, fileName) => {
         logger.debug(`Ignoring recently edited file ${fileName}`)
         return
     }
-    if (!fs.existsSync(fileName)) {
-        logger.debug(`Ignoring deleted file ${fileName}`)
-        return
-    }
     if (fileName.endsWith('.log')) {
-        //Can't log a .log file, can repeat forever! 
+        //Can't log a .log file, the logs will repeat forever! 
         return
     }
     if (imageExtensions.filter(ext => fileName.endsWith(ext)).length == 0) {
@@ -51,9 +42,15 @@ fs.watch('.', (event, fileName) => {
     }
 
     recentlyEdited.push(fileName)
-    scheduleRemoval(recentlyEdited, fileName)
 
-    compress(fileName, '.build/', { statistic: true, autoupdate: true }, false, { jpg: { engine: 'mozjpeg', command: ['-quality', '60'] } }, { png: { engine: 'pngquant', command: ['--quality=20-50'] } }, { svg: { engine: 'svgo', command: '--multipass' } }, { gif: { engine: 'gifsicle', command: ['--colors', '64', '--use-col=web'] } },
+    fileName = `${directory}/${fileName}`
+
+    if (!fs.existsSync(fileName)) {
+        logger.debug(`Ignoring deleted file ${fileName}`)
+        return
+    }
+
+    compress(fileName, './build/', { statistic: true, autoupdate: true }, false, { jpg: { engine: 'mozjpeg', command: ['-quality', '60'] } }, { png: { engine: 'pngquant', command: ['--quality=20-50'] } }, { svg: { engine: 'svgo', command: '--multipass' } }, { gif: { engine: 'gifsicle', command: ['--colors', '64', '--use-col=web'] } },
         function(err, completed, statistic) {
             logErr(err)
             if (!completed) {
@@ -67,6 +64,7 @@ fs.watch('.', (event, fileName) => {
             fs.rename(outName, fileName, () => {
                 logger.info('Successfully compressed file %s from %dKB to %dKB. %d\% File size reduction.', fileName, statistic.size_in, statistic.size_output, statistic.percent)
                 recentlyEdited.pop() //Removes `outName` from the array
+                recentlyEdited.splice(recentlyEdited.indexOf(fileName))
             })
         })
 })
