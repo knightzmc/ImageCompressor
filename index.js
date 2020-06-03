@@ -15,13 +15,13 @@ function logErr(err) {
 
 function getFileSize(fileName, callback) {
     fs.exists(fileName, exists => {
-	if(!exists) {
+        if (!exists) {
             callback(0)
             return
         }
         fs.lstat(fileName, (err, stats) => {
             logErr(err)
-            if(stats) {
+            if (stats) {
                 callback(stats.size)
             }
         })
@@ -35,6 +35,7 @@ if (process.env.NODE_ENV != 'dev') {
 const recentlyEdited = [];
 
 const directory = process.env.npm_config_directory || '.'
+
 fs.watch(directory, (_event, fileName) => {
     logger.debug("Incoming File %s", fileName)
     if (fileName.startsWith('.build/')) {
@@ -59,7 +60,8 @@ fs.watch(directory, (_event, fileName) => {
 
     function compareSize(previousSize, onFinish) {
         getFileSize(fileName, (size) => {
-            if(size === 0) {
+            logger.debug(`%s size: %d KB`, fileName, size)
+            if (size === 0) {
                 logger.debug("Size is 0. Assuming deleted file or more to be uploaded soon. Further checks must be prompted by watcher.")
                 recentlyEdited.splice(recentlyEdited.indexOf(fileName))
                 return
@@ -85,10 +87,7 @@ fs.watch(directory, (_event, fileName) => {
                     return
                 }
 
-
-                let outName = statistic.path_out_new
-
-                fs.rename(outName, fileName, () => {
+                fs.rename(statistic.path_out_new, fileName, () => {
                     logger.info('Successfully compressed file %s from %dKB to %dKB. %d\% File size reduction.', fileName, statistic.size_in, statistic.size_output, statistic.percent)
                     recentlyEdited.splice(recentlyEdited.indexOf(fileName))
                 })
