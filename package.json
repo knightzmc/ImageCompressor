@@ -20,7 +20,8 @@
         "pino": "^6.3.2",
         "pngquant": "^3.0.0",
         "lodash.template": ">=4.5.0",
-        "decompress": ">=4.2.1"
+        "decompress": ">=4.2.1",
+        "braces": ">=2.3.1"
     },
     "devDependencies": {
         "pino-pretty": "^4.0.0"
