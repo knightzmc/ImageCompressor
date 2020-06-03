@@ -14,9 +14,17 @@ function logErr(err) {
 }
 
 function getFileSize(fileName, callback) {
-    fs.lstat(fileName, (err, stats) => {
-        logErr(err)
-        callback(stats.size)
+    fs.exists(fileName, exists => {
+	if(!exists) {
+            callback(0)
+            return
+        }
+        fs.lstat(fileName, (err, stats) => {
+            logErr(err)
+            if(stats) {
+                callback(stats.size)
+            }
+        })
     })
 }
 
@@ -28,7 +36,7 @@ const recentlyEdited = [];
 
 const directory = process.env.npm_config_directory || '.'
 fs.watch(directory, (_event, fileName) => {
-
+    logger.debug("Incoming File %s", fileName)
     if (fileName.startsWith('.build/')) {
         logger.debug(`Ignoring file in build directory ${fileName}`)
         return
@@ -38,16 +46,11 @@ fs.watch(directory, (_event, fileName) => {
         return
     }
     if (fileName.endsWith('.log')) {
-        //Can't log a .log file, the logs will repeat forever! 
+        //Can't log a .log file, the logs will repeat forever!
         return
     }
     if (imageExtensions.filter(ext => fileName.endsWith(ext)).length == 0) {
         logger.debug(`Skipping file of type ${fileName.substring(fileName.lastIndexOf('.'))}`)
-        return
-    }
-
-    if (!fs.existsSync(fileName)) {
-        logger.debug(`Ignoring deleted file ${fileName}`)
         return
     }
 
@@ -56,12 +59,16 @@ fs.watch(directory, (_event, fileName) => {
 
     function compareSize(previousSize, onFinish) {
         getFileSize(fileName, (size) => {
-            logger.debug(size)
+            if(size === 0) {
+                logger.debug("Size is 0. Assuming deleted file or more to be uploaded soon. Further checks must be prompted by watcher.")
+                recentlyEdited.splice(recentlyEdited.indexOf(fileName))
+                return
+            }
             if (size !== previousSize) {
                 logger.debug("Sizes do not match. Waiting 10ms...")
                 setTimeout(() => {
                     compareSize(size, onFinish)
-                }, 10);
+                }, 100);
             } else {
                 logger.debug("Sizes match! %d - compressing...", size)
                 onFinish()
