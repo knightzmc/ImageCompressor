@@ -57,7 +57,7 @@ fs.watch(directory, (_event, fileName) => {
 
     function compareSize(previousSize, onFinish) {
         getFileSize(fileName, (size) => {
-            if (size != previousSize) {
+            if (size !== previousSize) {
                 compareSize(size, onFinish)
             } else {
                 onFinish()
