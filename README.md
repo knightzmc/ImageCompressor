@@ -6,10 +6,10 @@ It is a simple CLI that watches a directory for any new image files, and compres
 
 ImageCompressor supports 4 main file types:
 
-1. png
-2. jpg
-3. svg
-4. gif
+1. PNG
+2. JPEG
+3. SVG
+4. GIF
 
 and uses [compress-images](https://www.npmjs.com/package/compress-images) to handle image compression.
 
