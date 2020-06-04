@@ -67,7 +67,7 @@ fs.watch(directory, (_event, fileName) => {
                 return
             }
             if (size !== previousSize) {
-                logger.debug("Sizes do not match. Waiting 10ms...")
+                logger.debug("Sizes do not match. Waiting 100ms...")
                 setTimeout(() => {
                     compareSize(size, onFinish)
                 }, 100);
